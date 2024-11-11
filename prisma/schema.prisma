@@ -23,8 +23,8 @@ model Doctor {
   degree      String
   experience  String
   about       String
-  available   Boolean
-  fees        Float
+  available   Boolean @default(true)
+  fees        String
   address     Json
   date        Int
   slotsBooked Json    @default("{}") @map("slots_booked")
