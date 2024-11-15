@@ -74,6 +74,7 @@ const addDoctor = async (req, res) => {
         res.json({
             success: true,
             message: "New doctor added in the system",
+            newDoctor
         })
 
     } catch (error) {
@@ -85,7 +86,7 @@ const addDoctor = async (req, res) => {
     }
 };
 
-// api for admin login
+// api for admin login returns a token that is saved in user browser with local storage to determine admin 
 const adminLogin = (req, res) => {
     try {
         const { email, password } = req.body;
@@ -116,4 +117,43 @@ const adminLogin = (req, res) => {
     }
 }
 
-export { addDoctor, adminLogin };
+
+// api to get all doctors list for admin panel
+const getAllDoctors = async (req, res) => {
+    try {
+
+        const allDoctors = await prisma.doctor.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+                speciality: true,
+                degree: true,
+                experience: true,
+                about: true,
+                available: true,
+                fees: true,
+                address: true,
+                date: true,
+                slotsBooked: true,
+            },
+        });
+
+        res.json({
+            success: true,
+            allDoctors
+        })
+
+    } catch (error) {
+        console.log(error)
+        res.json({
+            success: false,
+            message: error.message,
+        })
+
+    }
+}
+
+
+export { addDoctor, adminLogin, getAllDoctors };
