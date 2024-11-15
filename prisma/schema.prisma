@@ -24,7 +24,7 @@ model Doctor {
   experience  String
   about       String
   available   Boolean @default(true)
-  fees        String
+  fees        Int
   address     Json
   date        Int
   slotsBooked Json    @default("{}") @map("slots_booked")
