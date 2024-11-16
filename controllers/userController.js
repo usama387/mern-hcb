@@ -111,4 +111,44 @@ const loginUser = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser };
+// api to get user profile data
+const getProfile = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    const userData = await prisma.user.findFirst({
+      where: {
+        id: userId,
+      },
+      select: {
+        name: true,
+        email: true,
+        image: true,
+        dob: true,
+        address: true,
+        gender: true,
+        phone: true,
+      },
+    });
+
+    return res.json({
+      success: true,
+      userData,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export { registerUser, loginUser, getProfile };
