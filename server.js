@@ -3,7 +3,7 @@ import cors from "cors";
 import "dotenv/config";
 import connectCloudinary from "./config/cloudinary.js";
 import adminRouter from "./routes/adminRoute.js";
-
+import doctorRouter from "./routes/doctorRoute.js";
 
 // app config
 const app = express();
@@ -12,21 +12,19 @@ connectCloudinary();
 
 // middlewares
 app.use(express.json());
-app.use(cors())
+app.use(cors());
 
+//admin api end point
+app.use("/api/admin", adminRouter);
 
-// api end points
-app.use("/api/admin", adminRouter)
-//localhost:4000/api/admin/add-doctor
+//doctor api end point
+app.use("/api/doctor", doctorRouter);
 
-
-
-app.get('/', (req, res) => {
-    res.send("api working greats")
-})
+app.get("/", (req, res) => {
+  res.send("api working greats");
+});
 
 // start express app
 app.listen(port, () => {
-    console.log(`The server is running on ${port}`)
-})
-
+  console.log(`The server is running on ${port}`);
+});

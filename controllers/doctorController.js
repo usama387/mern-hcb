@@ -36,4 +36,37 @@ const changeAvailability = async (req, res) => {
   }
 };
 
-export { changeAvailability };
+// api to get all doctors
+const doctorsList = async (req, res) => {
+  try {
+    const doctors = await prisma.doctor.findMany({
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        speciality: true,
+        degree: true,
+        experience: true,
+        about: true,
+        available: true,
+        fees: true,
+        address: true,
+        date: true,
+        slotsBooked: true,
+      },
+    });
+
+    res.json({
+      success: true,
+      doctors,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export { changeAvailability, doctorsList };
