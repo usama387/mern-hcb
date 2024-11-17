@@ -2,6 +2,7 @@ import validator from "validator";
 import bcrypt from "bcrypt";
 import prisma from "../config/prisma.js";
 import jwt from "jsonwebtoken";
+import { v2 as cloudinary } from "cloudinary";
 
 // api to register user or patient
 const registerUser = async (req, res) => {
@@ -151,4 +152,76 @@ const getProfile = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getProfile };
+// api to update profile data
+const updateProfile = async (req, res) => {
+  try {
+    const { userId, name, phone, address, dob, gender } = req.body;
+
+    const imageFile = req.file;
+
+    // data check
+    if (!userId || !name || !phone || !address || !dob || !gender) {
+      return res.json({
+        success: false,
+        message: "Something missing in the data",
+      });
+    }
+
+    // Parse address if necessary
+    let parsedAddress;
+    try {
+      parsedAddress =
+        typeof address === "string" ? JSON.parse(address) : address;
+    } catch {
+      return res.json({
+        success: false,
+        message: "Invalid address format",
+      });
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        name,
+        phone,
+        address: parsedAddress,
+        dob,
+        gender,
+      },
+    });
+
+    if (imageFile) {
+      // upload image to cloudinary
+      const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
+        resource_type: "image",
+      });
+
+      const imageUrl = imageUpload.secure_url;
+
+      await prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          image: imageUrl,
+        },
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Profile updated successfully",
+      user: updatedUser,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export { registerUser, loginUser, getProfile, updateProfile };
