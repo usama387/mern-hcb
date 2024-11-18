@@ -65,7 +65,7 @@ const registerUser = async (req, res) => {
     });
   }
 };
-
+// api to login user and return token in response
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -86,6 +86,7 @@ const loginUser = async (req, res) => {
     // verifying user entered password with the db password
     const verifyPassword = await bcrypt.compare(password, user.password);
 
+    // if password is correct send a token and map with userId
     if (verifyPassword) {
       const token = jwt.sign(
         {
@@ -329,4 +330,41 @@ const bookAppointment = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getProfile, updateProfile, bookAppointment };
+// api to get user appointments to render on my-appointments page
+const listAppointments = async (req, res) => {
+  try {
+    const { userId } = req.body;
+
+    const appointments = await prisma.appointment.findMany({
+      where: {
+        userId: userId,
+      },
+    });
+
+    if (!appointments) {
+      return res.json({
+        success: false,
+        message: "No appointments booked",
+      });
+    }
+
+    res.json({
+      success: true,
+      appointments,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export {
+  registerUser,
+  loginUser,
+  getProfile,
+  updateProfile,
+  bookAppointment,
+  listAppointments,
+};
