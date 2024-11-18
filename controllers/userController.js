@@ -224,4 +224,109 @@ const updateProfile = async (req, res) => {
   }
 };
 
-export { registerUser, loginUser, getProfile, updateProfile };
+// api to book doctor appointment
+const bookAppointment = async (req, res) => {
+  try {
+    const { userId, docId, slotDate, slotTime } = req.body;
+
+    // at first using doc id getting doctors data to perform booking operations
+    const doctorData = await prisma.doctor.findFirst({
+      where: {
+        id: docId,
+      },
+      select: {
+        id: true,
+        name: true,
+        image: true,
+        speciality: true,
+        degree: true,
+        experience: true,
+        about: true,
+        available: true,
+        fees: true,
+        address: true,
+        date: true,
+        slotsBooked: true,
+      },
+    });
+
+    // if doctor not available terminate the function
+    if (!doctorData.available) {
+      return res.json({
+        success: false,
+        message: "Doctor not available",
+      });
+    }
+
+    // if doctor is available then this variable has details booked slots of the doctor
+    let slotsBooked = doctorData.slotsBooked;
+
+    // now checking for slots availability according to the user or patient time and date and then booking slot
+    if (slotsBooked[slotDate]) {
+      if (slotsBooked[slotDate].includes(slotTime)) {
+        return res.json({
+          success: false,
+          message: "This slot is already booked",
+        });
+      } else {
+        slotsBooked[slotDate].push(slotTime);
+      }
+    } else {
+      slotsBooked[slotDate] = [];
+      slotsBooked[slotDate].push(slotTime);
+    }
+
+    const userData = await prisma.user.findFirst({
+      where: {
+        id: userId,
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        image: true,
+        address: true,
+        gender: true,
+        dob: true,
+        phone: true,
+      },
+    });
+
+    delete doctorData.slotsBooked;
+
+    // save appointment with the data
+    const newAppointment = await prisma.appointment.create({
+      data: {
+        userId,
+        docId,
+        userData,
+        docData: doctorData,
+        amount: doctorData.fees,
+        slotTime,
+        slotDate,
+        date: Math.floor(Date.now() / 1000),
+      },
+    });
+
+    // update slots for other patients / users in doctor data
+    await prisma.doctor.update({
+      where: {
+        id: docId,
+      },
+      data: { slotsBooked: slotsBooked },
+    });
+
+    return res.json({
+      success: true,
+      message: "Appointment booked",
+      appointment: newAppointment,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export { registerUser, loginUser, getProfile, updateProfile, bookAppointment };
