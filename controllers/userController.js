@@ -330,6 +330,39 @@ const bookAppointment = async (req, res) => {
   }
 };
 
+// api to delete an appointment form my-appointments page
+const deleteAppointment = async (req, res) => {
+  try {
+    const { userId, appointmentId } = req.body;
+
+    if (!appointmentId) {
+      return res.status(400).json({
+        success: false,
+        message: "Appointment ID is required",
+      });
+    }
+
+    const deletedAppointment = await prisma.appointment.delete({
+      where: {
+        id: appointmentId,
+        userId: userId,
+      },
+    });
+
+    res.json({
+      success: true,
+      message: "Deleted Successfully",
+      deletedAppointment,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 // api to get user appointments to render on my-appointments page
 const listAppointments = async (req, res) => {
   try {
@@ -360,6 +393,82 @@ const listAppointments = async (req, res) => {
   }
 };
 
+// api to cancel user appointment
+const cancelAppointment = async (req, res) => {
+  try {
+    const { userId, appointmentId } = req.body;
+
+    // Step 1: Fetch appointment data
+    const appointmentData = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+    });
+
+    // Step 2: Verify if the appointment exists
+    if (!appointmentData) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    // Step 3: Authorization check
+    if (appointmentData.userId !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized action",
+      });
+    }
+
+    // Step 4: Update the appointment's cancelled status
+    await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: { cancelled: true },
+    });
+
+    // Step 5: Releasing doctor's slot
+    const { docId, slotDate, slotTime } = appointmentData;
+
+    // getting doctor info to
+    const doctorData = await prisma.doctor.findUnique({
+      where: { id: docId },
+    });
+
+    if (!doctorData) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    // accessing doctor slots for update after
+    const slotsBooked = doctorData.slotsBooked;
+
+    if (slotsBooked[slotDate]) {
+      // Remove the specific time from slots
+      slotsBooked[slotDate] = slotsBooked[slotDate].filter(
+        (time) => time !== slotTime
+      );
+
+      // Update doctor's slots
+      await prisma.doctor.update({
+        where: { id: docId },
+        data: { slotsBooked },
+      });
+    }
+
+    return res.json({
+      success: true,
+      message: "Appointment cancelled successfully",
+    });
+  } catch (error) {
+    console.error("Cancel Appointment Error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 export {
   registerUser,
   loginUser,
@@ -367,4 +476,6 @@ export {
   updateProfile,
   bookAppointment,
   listAppointments,
+  cancelAppointment,
+  deleteAppointment,
 };
