@@ -158,4 +158,90 @@ const getAllDoctors = async (req, res) => {
   }
 };
 
-export { addDoctor, adminLogin, getAllDoctors };
+// api to get all appointments for admin
+const getAllAppointmentsAdmin = async (req, res) => {
+  try {
+    const appointments = await prisma.appointment.findMany({});
+
+    return res.json({
+      success: true,
+      appointments,
+    });
+  } catch (error) {
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// api to cancel an appointment as an admin
+const cancelAppointmentAsAdmin = async (req, res) => {
+  try {
+    const { appointmentId } = req.body;
+
+    // Step 1: Fetch appointment data
+    const appointmentData = await prisma.appointment.findUnique({
+      where: { id: appointmentId },
+    });
+
+    // Step 2: Verify if the appointment exists
+    if (!appointmentData) {
+      return res.status(404).json({
+        success: false,
+        message: "Appointment not found",
+      });
+    }
+
+    // Step 4: Update the appointment's cancelled status
+    await prisma.appointment.update({
+      where: { id: appointmentId },
+      data: { cancelled: true },
+    });
+
+    // Step 5: Releasing doctor's slot
+    const { docId, slotDate, slotTime } = appointmentData;
+
+    // getting doctor info to
+    const doctorData = await prisma.doctor.findUnique({
+      where: { id: docId },
+    });
+
+    if (!doctorData) {
+      return res.status(404).json({
+        success: false,
+        message: "Doctor not found",
+      });
+    }
+
+    // accessing doctor slots for update after
+    const slotsBooked = doctorData.slotsBooked;
+
+    if (slotsBooked[slotDate]) {
+      // Remove the specific time from slots
+      slotsBooked[slotDate] = slotsBooked[slotDate].filter(
+        (time) => time !== slotTime
+      );
+
+      // Update doctor's slots
+      await prisma.doctor.update({
+        where: { id: docId },
+        data: { slotsBooked },
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+export {
+  addDoctor,
+  adminLogin,
+  getAllDoctors,
+  getAllAppointmentsAdmin,
+  cancelAppointmentAsAdmin,
+};
