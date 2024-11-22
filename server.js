@@ -29,7 +29,10 @@ app.get("/", (req, res) => {
   res.send("api working greats");
 });
 
-// start express app
-app.listen(port, () => {
-  console.log(`The server is running on ${port}`);
-});
+// // start express app
+// app.listen(port, () => {
+//   console.log(`The server is running on ${port}`);
+// });
+
+// Export the app for Vercel
+export default app;
