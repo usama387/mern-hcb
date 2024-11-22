@@ -22,6 +22,7 @@ const corsOptions = {
   ],
   credentials: true, // To allow cookies or authentication headers
 };
+app.options('*', cors(corsOptions)); // Handle preflight
 
 app.use(cors(corsOptions));
 
