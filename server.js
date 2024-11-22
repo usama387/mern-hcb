@@ -13,7 +13,17 @@ connectCloudinary();
 
 // middlewares
 app.use(express.json());
-app.use(cors());
+
+// Define your CORS options
+const corsOptions = {
+  origin: [
+    "https://mern-hca.vercel.app",
+    "https://project-healthcare-frontend.vercel.app",
+  ],
+  credentials: true, // To allow cookies or authentication headers
+};
+
+app.use(cors(corsOptions));
 
 //admin api end point
 app.use("/api/admin", adminRouter);
@@ -22,8 +32,7 @@ app.use("/api/admin", adminRouter);
 app.use("/api/doctor", doctorRouter);
 
 //user or patient api end point
-app.use("/api/user", userRouter)
-
+app.use("/api/user", userRouter);
 
 app.get("/", (req, res) => {
   res.send("api working greats");
