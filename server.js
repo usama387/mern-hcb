@@ -14,17 +14,8 @@ connectCloudinary();
 // middlewares
 app.use(express.json());
 
-// Define your CORS options
-const corsOptions = {
-  origin: [
-    "https://mern-hca.vercel.app",
-    "https://project-healthcare-frontend.vercel.app",
-  ],
-  credentials: true, // To allow cookies or authentication headers
-};
-app.options('*', cors(corsOptions)); // Handle preflight
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 //admin api end point
 app.use("/api/admin", adminRouter);
@@ -44,5 +35,4 @@ app.listen(port, () => {
   console.log(`The server is running on ${port}`);
 });
 
-// Export the app for Vercel
-// export default app;
+

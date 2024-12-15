@@ -238,6 +238,20 @@ const cancelAppointmentAsAdmin = async (req, res) => {
   }
 };
 
+// api to get dashboard data for admin panel
+// const adminDashboard = async (req, res) => {
+//   try {
+
+
+//   } catch (error) {
+//     console.log(error.message);
+//     return res.json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
 export {
   addDoctor,
   adminLogin,
